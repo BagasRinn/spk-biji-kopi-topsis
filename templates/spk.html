@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center mb-5">
+    <div class="col-lg-8 text-center">
+        <div class="card bg-white py-5 px-4 shadow-sm border-0 rounded-4">
+            <div class="card-body">
+                <div class="display-1 text-primary mb-3"><i class="bi bi-cpu"></i></div>
+                <h2 class="fw-bold mb-3">Engine TOPSIS Siap</h2>
+                <p class="text-muted mb-4 fs-5">Tekan tombol di bawah untuk memproses matriks, menghitung jarak ideal positif-negatif, dan menerbitkan laporan rekomendasi supplier.</p>
+                <form action="{{ url_for('spk') }}" method="POST">
+                    <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 py-3 shadow-sm fw-bold">
+                        <i class="bi bi-lightning-charge-fill me-2"></i> JALANKAN KALKULASI
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if hasil_spk %}
+<div class="row justify-content-center" id="hasilLaporan">
+    <div class="col-12">
+        <div class="d-flex align-items-center mb-3">
+            <h4 class="fw-bold mb-0"><i class="bi bi-journal-check text-success me-2"></i>Laporan Rekomendasi Final</h4>
+            <div class="ms-auto">
+                <button class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+                    <i class="bi bi-printer me-1"></i> Cetak Laporan
+                </button>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm overflow-hidden rounded-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 text-center">
+                    <thead class="bg-light text-secondary">
+                        <tr>
+                            <th class="py-3">Peringkat</th>
+                            <th class="py-3 text-start">Nama Supplier</th>
+                            <th class="py-3">Skor Preferensi (Vi)</th>
+                            <th class="py-3">Status Keputusan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for h in hasil_spk %}
+                        <tr class="{% if loop.index == 1 %}bg-success bg-opacity-10{% endif %}">
+                            <td class="py-3">
+                                {% if loop.index == 1 %}
+                                    <span class="fs-4">🏆</span><br>
+                                    <small class="fw-bold text-success">Rank 1</small>
+                                {% else %}
+                                    <span class="fw-bold fs-5 text-muted">#{{ loop.index }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-start py-3">
+                                <span class="fw-bold fs-5 {% if loop.index == 1 %}text-success{% else %}text-dark{% endif %}">
+                                    {{ h.nama_supplier }}
+                                </span>
+                            </td>
+                            <td class="font-monospace fw-bold fs-5 py-3">{{ "%.3f"|format(h.skor_akhir) }}</td>
+                            <td class="py-3">
+                                {% if h.keputusan == 'Terpilih (Penerima PO)' %}
+                                    <span class="badge bg-success text-white py-2 px-4 rounded-pill shadow-sm">
+                                        <i class="bi bi-check2-circle me-1"></i> {{ h.keputusan }}
+                                    </span>
+                                {% elif h.keputusan == 'Alternatif Cadangan' %}
+                                    <span class="badge bg-warning text-dark py-2 px-4 rounded-pill">
+                                        <i class="bi bi-hourglass-split me-1"></i> {{ h.keputusan }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger py-2 px-4 rounded-pill border border-danger">
+                                        <i class="bi bi-x-circle me-1"></i> {{ h.keputusan }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const laporan = document.getElementById("hasilLaporan");
+        if(laporan) {
+            laporan.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

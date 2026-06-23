@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h3 class="fw-bold"><i class="bi bi-folder2-open me-2 text-primary"></i>Tinjauan Data Master</h3>
+        <p class="text-muted">Langkah 1: Pastikan kriteria dan daftar supplier sudah sesuai sebelum melakukan kalkulasi.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card h-100 border-top border-primary border-4">
+            <div class="card-body p-4">
+                <h5 class="card-title fw-bold mb-4">Bobot & Kriteria (D1)</h5>
+                <div class="table-responsive">
+                    <table class="table table-borderless align-middle">
+                        <thead class="border-bottom">
+                            <tr class="text-secondary">
+                                <th>ID</th>
+                                <th>Kriteria</th>
+                                <th>Sifat</th>
+                                <th>Bobot</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for k in kriteria %}
+                            <tr>
+                                <td class="fw-semibold text-primary">{{ k.id_kriteria }}</td>
+                                <td>{{ k.nama_kriteria }}</td>
+                                <td>
+                                    {% if k.sifat == 'Benefit' %}
+                                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill"><i class="bi bi-arrow-up-circle me-1"></i>Benefit</span>
+                                    {% else %}
+                                        <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill"><i class="bi bi-arrow-down-circle me-1"></i>Cost</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-bold">{{ k.bobot_desimal }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card h-100 border-top border-success border-4">
+            <div class="card-body p-4">
+                <h5 class="card-title fw-bold mb-4">Kandidat Supplier (D2)</h5>
+                <div class="table-responsive">
+                    <table class="table table-borderless align-middle">
+                        <thead class="border-bottom">
+                            <tr class="text-secondary">
+                                <th>ID</th>
+                                <th>Nama Supplier</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in supplier %}
+                            <tr>
+                                <td><span class="badge bg-light text-dark border">{{ s.id_supplier }}</span></td>
+                                <td class="fw-semibold">{{ s.nama_supplier }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
