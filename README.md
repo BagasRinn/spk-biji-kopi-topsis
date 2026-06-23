@@ -32,7 +32,7 @@ Proyek ini dibangun sebagai implementasi praktis dari perancangan Data Flow Diag
 ## Cara Instalasi & Menjalankan (Lokal)
 
 1. **Kloning Repositori**
-   `git clone https://github.com/[USERNAME_GITHUB_KAMU]/spk-kopi-topsis.git`
+   `git clone https://github.com/BagasRinn/spk-biji-kopi-topsis.git`
    `cd spk-kopi-topsis`
 
 2. **Ciptakan & Aktifkan Virtual Environment**
