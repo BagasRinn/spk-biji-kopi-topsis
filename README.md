@@ -6,26 +6,37 @@ Proyek ini dibangun sebagai implementasi praktis dari perancangan Data Flow Diag
 
 ---
 
-## Fitur Utama (MVP)
+## Fitur Utama
 
-1. **Master Data Read-Only**: Visualisasi kriteria penilaian (Cost/Benefit) beserta pembobotan desimal, dan daftar alternatif supplier mitra.
-2. **Matriks Penawaran Terpusat**: Representasi *Strictly Normalized* (3NF) dari data penawaran harga, kualitas (cupping score), waktu pengiriman, dan varian dari masing-masing roastery.
-3. **TOPSIS Decision Engine**: Modul kalkulasi matematis murni (tanpa dependensi komputasi berat) yang memproses:
-   - Pembentukan Matriks Keputusan ($X$)
-   - Normalisasi Matriks ($R$)
-   - Normalisasi Terbobot ($Y$)
-   - Penentuan Solusi Ideal Positif ($A^+$) dan Negatif ($A^-$)
-   - Perhitungan Jarak Euclidean ($D^+$ / $D^-$) dan Nilai Preferensi ($V_i$)
-4. **Auto-Healing Database**: Sistem dilengkapi *startup-hook* yang otomatis menciptakan dan mengisi skema database SQLite saat pertama kali dijalankan.
+* **Enterprise Auth & RBAC**: Sistem otentikasi terotentikasi berlapis yang memisahkan wewenang kerja antara Staf Logistik dengan Manajer Kedai (*Separation of Duties*).
+* **Defense in Depth Security**: Pengamanan ganda menggunakan visualisasi bersyarat pada antarmuka (*Frontend*) dan pemblokiran rute paksa pada tingkat pengontrol (*Backend Route Guard*).
+* **Master Data Read-Only**: Visualisasi kriteria penilaian (*Cost/Benefit*) beserta pembobotan desimal, dan daftar alternatif supplier mitra.
+* **Matriks Penawaran Terpusat**: Representasi *Strictly Normalized* (3NF) dari data penawaran harga, kualitas (*cupping score*), waktu pengiriman, dan varian biji kopi.
+* **TOPSIS Decision Engine**: Modul kalkulasi matematis murni yang memproses pembentukan matriks keputusan hingga nilai preferensi akhir (V).
+* **Auto-Healing Database**: Sistem dilengkapi *startup-hook* yang otomatis menciptakan dan mengisi skema database SQLite beserta akun pengguna saat pertama kali dijalankan.
+
+---
+
+## Kredensial Pengujian (Demo Accounts)
+
+Sistem telah di-seed dengan 2 hak akses berdaulat:
+
+| Role (Jabatan) | Username | Password | Wewenang Akses |
+| :--- | :---: | :---: | :--- |
+| **Admin Logistik** | `admin` | `admin123` | Mengelola Master Data & melihat Matriks Penawaran |
+| **Manajer Kedai** | `manajer` | `manajer123` | Menjalankan enjin SPK TOPSIS & melegitimasi PO |
+
+*(Catatan Security: Seluruh sandi di atas disimpan di dalam database dalam format terenkripsi menggunakan algoritma `PBKDF2 SHA-256`).*
 
 ---
 
 ## Tech Stack
 
-- **Backend**: Python 3.10+, Flask
-- **Database**: SQLite3 (Native `sqlite3` driver)
-- **Frontend**: HTML5, Jinja2 Templating, Bootstrap 5 (CDN)
-- **Architecture**: Monolithic, PRG (*Post-Redirect-Get*) Pattern
+* **Backend**: Python 3.10+, Flask
+* **Database**: SQLite3 (Native `sqlite3` driver)
+* **Security**: Werkzeug Security (Password Hashing), Flask HTTP Session
+* **Frontend**: HTML5, Jinja2 Templating, Bootstrap 5 (CDN)
+* **Arsitektur**: Monolithic, PRG (*Post-Redirect-Get*) Pattern
 
 ---
 

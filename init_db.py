@@ -1,5 +1,6 @@
 import sqlite3
 import logging
+from werkzeug.security import generate_password_hash
 
 # Konfigurasi basic logging untuk standard output
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -18,6 +19,7 @@ def init_database():
 
         # 1. DROP TABLES
         tables_to_drop = [
+            "users",
             "D4_hasil_kalkulasi",
             "D3_penawaran",
             "D2_supplier",
@@ -28,6 +30,16 @@ def init_database():
         logging.info("Tabel lama berhasil di-drop (jika ada).")
 
         # 2. CREATE TABLES
+        # Tabel Users
+        cursor.execute('''
+            CREATE TABLE users (
+                username TEXT PRIMARY KEY,
+                password_hash TEXT NOT NULL,
+                role TEXT NOT NULL CHECK(role IN ('Admin Logistik', 'Manajer Kedai')),
+                nama_lengkap TEXT NOT NULL
+            );
+        ''')
+        
         # D1: Tabel Kriteria
         cursor.execute('''
             CREATE TABLE D1_kriteria (
@@ -73,6 +85,12 @@ def init_database():
         logging.info("Struktur tabel (D1, D2, D3, D4) berhasil dibuat.")
 
         # 3. SEEDING DATA
+        data_users = [
+            ('admin', generate_password_hash('admin123'), 'Admin Logistik', 'Administrator'),
+            ('manager', generate_password_hash('manager123'), 'Manajer Kedai', 'Manajer Kedai')
+        ]
+        cursor.executemany("INSERT INTO users VALUES (?, ?, ?, ?)", data_users)
+        
         # D1: Kriteria
         data_kriteria = [
             ('C1', 'Harga per Kg', 'Cost', 0.30),

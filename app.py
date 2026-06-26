@@ -1,10 +1,12 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from werkzeug.security import check_password_hash
 import sqlite3
 import datetime
 import time
 from engine import run_topsis
 
 app = Flask(__name__)
+app.secret_key = 'kopi_topsis_super_rahasia_sekali'
 DB_PATH = 'database.db'
 
 
@@ -15,71 +17,117 @@ def get_db_connection():
     return conn
 
 
+# Login & Logout
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        with get_db_connection() as conn:
+            user = conn.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
+        
+        if user and check_password_hash(user['password_hash'], password):
+            session['username'] = user['username']
+            session['role'] = user['role']
+            session['nama_lengkap'] = user['nama_lengkap']
+            
+            # SMART REDIRECT: Lempar user langsung ke "Rumah"-nya masing-masing
+            if session['role'] == 'Admin Logistik':
+                return redirect(url_for('index'))
+            else:
+                return redirect(url_for('spk'))
+        else:
+            flash('Username atau Password salah!', 'danger')
+            
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+
 # Halaman Master Data
 @app.route('/', methods=['GET'])
 def index():
-    conn = get_db_connection()
-    kriteria = conn.execute('SELECT * FROM D1_kriteria').fetchall()
-    supplier = conn.execute('SELECT * FROM D2_supplier').fetchall()
-    conn.close()
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    # LAPIS 2: Gembok Backend
+    if session.get('role') != 'Admin Logistik':
+        flash('AKSES DITOLAK: Halaman Master Data adalah wilayah kerja Admin Logistik!', 'danger')
+        return redirect(url_for('spk'))
 
+    with get_db_connection() as conn:
+        kriteria = conn.execute('SELECT * FROM D1_kriteria').fetchall()
+        supplier = conn.execute('SELECT * FROM D2_supplier').fetchall()
+    
     return render_template('index.html', kriteria=kriteria, supplier=supplier)
 
 
 # Halaman Matriks Penawaran
 @app.route('/penawaran', methods=['GET'])
 def penawaran():
-    conn = get_db_connection()
-    query = """
-        SELECT s.nama_supplier, k.nama_kriteria, p.nilai
-        FROM D3_penawaran p
-        JOIN D2_supplier s ON p.id_supplier = s.id_supplier
-        JOIN D1_kriteria k ON p.id_kriteria = k.id_kriteria
-        ORDER BY p.id_supplier, p.id_kriteria
-    """
-    data_penawaran = conn.execute(query).fetchall()
-    conn.close()
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    # LAPIS 2: Gembok Backend
+    if session.get('role') != 'Admin Logistik':
+        flash('AKSES DITOLAK: Matriks Penawaran hanya boleh dikelola Admin Logistik!', 'danger')
+        return redirect(url_for('spk'))
 
+    with get_db_connection() as conn:
+        query = """
+            SELECT s.nama_supplier, k.nama_kriteria, p.nilai 
+            FROM D3_penawaran p
+            JOIN D2_supplier s ON p.id_supplier = s.id_supplier
+            JOIN D1_kriteria k ON p.id_kriteria = k.id_kriteria
+            ORDER BY p.id_supplier, p.id_kriteria
+        """
+        data_penawaran = conn.execute(query).fetchall()
+    
     return render_template('penawaran.html', penawaran=data_penawaran)
 
 
 # Halaman SPK & Laporan
 @app.route('/spk', methods=['GET', 'POST'])
 def spk():
-    # tombol "JALANKAN KALKULASI TOPSIS"
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    
+    # LAPIS 2: Gembok Backend (Mengunci GET maupun POST sekaligus!)
+    if session.get('role') != 'Manajer Kedai':
+        flash('AKSES DITOLAK: Kalkulasi dan Keputusan SPK adalah wewenang eksklusif Manajer Kedai!', 'danger')
+        return redirect(url_for('index'))
+
     if request.method == 'POST':
         kode_batch = "BATCH-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-
         run_topsis(kode_batch)
-
         return redirect(url_for('spk'))
-
-    conn = get_db_connection()
-
-    query_latest_batch = "SELECT kode_batch FROM D4_hasil_kalkulasi ORDER BY id_kalkulasi DESC LIMIT 1"
-    latest_batch_row = conn.execute(query_latest_batch).fetchone()
-
-    hasil_spk = []
-    if latest_batch_row:
-        latest_batch = latest_batch_row['kode_batch']
-
-        query_hasil = """
-            SELECT s.nama_supplier, h.skor_akhir, h.keputusan
-            FROM D4_hasil_kalkulasi h
-            JOIN D2_supplier s ON h.id_supplier = s.id_supplier
-            WHERE h.kode_batch = ?
-            ORDER BY h.skor_akhir DESC
-        """
-        hasil_spk = conn.execute(query_hasil, (latest_batch,)).fetchall()
-
-    conn.close()
-
+    
+    with get_db_connection() as conn:
+        latest_batch_row = conn.execute("SELECT kode_batch FROM D4_hasil_kalkulasi ORDER BY id_kalkulasi DESC LIMIT 1").fetchone()
+        hasil_spk = []
+        if latest_batch_row:
+            query_hasil = """
+                SELECT s.nama_supplier, h.skor_akhir, h.keputusan 
+                FROM D4_hasil_kalkulasi h
+                JOIN D2_supplier s ON h.id_supplier = s.id_supplier
+                WHERE h.kode_batch = ?
+                ORDER BY h.skor_akhir DESC
+            """
+            hasil_spk = conn.execute(query_hasil, (latest_batch_row['kode_batch'],)).fetchall()
+            
     return render_template('spk.html', hasil_spk=hasil_spk)
 
 
 # Halaman Kelola
 @app.route('/kelola', methods=['GET', 'POST'])
 def kelola():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
     with get_db_connection() as conn:
         # form submission
         if request.method == 'POST':
