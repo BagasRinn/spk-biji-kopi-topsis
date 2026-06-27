@@ -31,8 +31,7 @@ def login():
             session['username'] = user['username']
             session['role'] = user['role']
             session['nama_lengkap'] = user['nama_lengkap']
-            
-            # SMART REDIRECT: Lempar user langsung ke "Rumah"-nya masing-masing
+
             if session['role'] == 'Admin Logistik':
                 return redirect(url_for('index'))
             else:
@@ -54,7 +53,6 @@ def index():
     if 'username' not in session:
         return redirect(url_for('login'))
     
-    # LAPIS 2: Gembok Backend
     if session.get('role') != 'Admin Logistik':
         flash('AKSES DITOLAK: Halaman Master Data adalah wilayah kerja Admin Logistik!', 'danger')
         return redirect(url_for('spk'))
@@ -72,7 +70,6 @@ def penawaran():
     if 'username' not in session:
         return redirect(url_for('login'))
     
-    # LAPIS 2: Gembok Backend
     if session.get('role') != 'Admin Logistik':
         flash('AKSES DITOLAK: Matriks Penawaran hanya boleh dikelola Admin Logistik!', 'danger')
         return redirect(url_for('spk'))
@@ -96,7 +93,7 @@ def spk():
     if 'username' not in session:
         return redirect(url_for('login'))
     
-    # LAPIS 2: Gembok Backend (Mengunci GET maupun POST sekaligus!)
+    # Mengunci GET maupun POST
     if session.get('role') != 'Manajer Kedai':
         flash('AKSES DITOLAK: Kalkulasi dan Keputusan SPK adalah wewenang eksklusif Manajer Kedai!', 'danger')
         return redirect(url_for('index'))
@@ -161,7 +158,7 @@ def kelola():
                 (s['id_supplier'],)
             ).fetchall()
 
-            # Ubah dari list ke dictionary (Pivot) agar mudah dibaca oleh Jinja2
+            # Ubah dari list ke dictionary agar mudah dibaca oleh Jinja2
             penawaran_dict = {p['id_kriteria']: p['nilai'] for p in penawaran_raw}
 
             suppliers_detail.append({

@@ -16,5 +16,5 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Database (PARKIR DULU: Baca pertanyaan di bawah)
+# Database
 database.db
